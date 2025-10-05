@@ -1,115 +1,102 @@
 #include "main.h"
 
-
 /**
- * file_exist - Checks if a file exists.
- * @file: The name of the file to check.
- * Return: EXIT_SUCCESS if the file exists, EXIT_FAILURE otherwise.
+ * file_exist - Checks if a file exists
  */
-
-
 int file_exist(char *file)
 {
-	struct stat st;
+    struct stat st;
 
-	if (stat(file, &st) == 0)
-		return (EXIT_SUCCESS);
-
-	return (EXIT_FAILURE);
+    if (stat(file, &st) == 0)
+        return (0);
+    return (1);
 }
 
 /**
- * find_cmd_path - finds full path of a command in PATH environment variable.
- * @cmd: The command to find
- * @work_buffer: The buffer to store the full path.
- * Return: EXIT_SUCCESS if the command is found, EXIT_FAILURE otherwise.
+ * find_cmd_path - Finds full path of command using PATH
  */
-
 int find_cmd_path(char *cmd, char *work_buffer)
 {
-	char *token;
-	char *var_path, *var_value_path;
-	/* Look if file exists only if command starts with "/" or "./" or "../"*/
-	/* If so, absolute path, no need to check the PATH. */
-	if ((cmd[0] == '/' || strncmp(cmd, "./", 2) == 0 ||
-		strncmp(cmd, "../", 3) == 0) && file_exist(cmd) == EXIT_SUCCESS)
-		return (EXIT_SUCCESS);
+    char *path_var = _getenv("PATH");
+    char *token;
+    int i, j;
 
-	var_value_path = _getenv("PATH");
-	if (var_value_path == NULL)  /* If no PATH variable: like if PATH was unset */
-		return (EXIT_FAILURE);
-	if (strlen(var_value_path) == 0)/* if PATH= , defined but empty*/
-		return (EXIT_FAILURE);
+    if (cmd[0] == '/' || (cmd[0] == '.' && cmd[1] == '/'))
+    {
+        if (file_exist(cmd) == 0)
+        {
+            for (i = 0; cmd[i]; i++)
+                work_buffer[i] = cmd[i];
+            work_buffer[i] = '\0';
+            return (0);
+        }
+        return (1);
+    }
 
-	var_path = strdup(var_value_path);
-	if (var_path == NULL)
-		return (EXIT_FAILURE);
+    if (!path_var || !*path_var)
+        return (1);
 
-	token = strtok(var_path, ":");
-	while (token)
-	{
-		if (sprintf(work_buffer, "%s/%s", token, cmd) < 0)
-		{
-			free(var_path);
-			return (EXIT_FAILURE);
-		}
-		/*test if current PATH path+cmd exists*/
-		if (file_exist(work_buffer) == EXIT_SUCCESS)
-		{
-			free(var_path);
-			return (EXIT_SUCCESS);
-		}
-		token = strtok(NULL, ":");
-	}
-	free(var_path);
-	return (EXIT_FAILURE);
+    /* iterate PATH directories */
+    i = 0;
+    while (path_var[i])
+    {
+        int k = 0;
+        char dir[1024];
+
+        /* copy until ':' or end */
+        j = 0;
+        while (path_var[i] && path_var[i] != ':' && j < 1023)
+            dir[j++] = path_var[i++];
+        dir[j] = '\0';
+        if (path_var[i] == ':')
+            i++;
+
+        /* build full path */
+        j = 0;
+        while (dir[j])
+        {
+            work_buffer[j] = dir[j];
+            j++;
+        }
+        work_buffer[j++] = '/';
+
+        int m = 0;
+        while (cmd[m])
+            work_buffer[j++] = cmd[m++];
+        work_buffer[j] = '\0';
+
+        if (file_exist(work_buffer) == 0)
+            return (0);
+    }
+    return (1);
 }
+
 /**
- * execute_command - Executes a command.
- * @argv: The array of arguments for the command.
- * Return: EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ * execute_command - fork and exec command
  */
-
-int execute_command(char **argv)
+int execute_command(char *argv[])
 {
-	pid_t child_pid;
-	int status;
-	char *cmd = argv[0], *work_buffer;
+    pid_t pid;
+    int status;
+    char work_buffer[1024];
 
-	work_buffer = malloc(1024);
-	if (work_buffer == NULL)
-		return (shell_error());
-	/* init with received value cmd=argv[0] */
-	if (strcpy(work_buffer, cmd) != work_buffer)
-	{
-		free(work_buffer);
-		return (shell_error());
-	}
-	if (find_cmd_path(cmd, work_buffer) == EXIT_FAILURE)
-	{
-		fprintf(stderr, "./hsh: 1: %s: not found\n", cmd);
-		free(work_buffer);
-		return (127);
-	}
-	child_pid = fork();
-	if (child_pid == -1)
-	{
-		free(work_buffer);
-		return (shell_error());
-	}
-	if (child_pid == 0)
-	{
-		if (execve(work_buffer, argv, environ) == -1)
-		{
-			fprintf(stderr, "./hsh: 1: %s: not found\n", cmd);
-			free(work_buffer);
-			exit(127);
-		}
-		exit(EXIT_FAILURE);
-	}
-	wait(&status);
-	free(work_buffer);
-	if (WIFEXITED(status))
-		status = WEXITSTATUS(status); /* status of child */
-	return (status);
+    if (find_cmd_path(argv[0], work_buffer))
+    {
+        fprintf(stderr, "./hsh: 1: %s: not found\n", argv[0]);
+        return (127);
+    }
+
+    pid = fork();
+    if (pid < 0)
+        return (shell_error());
+    if (pid == 0)
+    {
+        execve(work_buffer, argv, environ);
+        fprintf(stderr, "./hsh: 1: %s: not found\n", argv[0]);
+        _exit(127);
+    }
+    wait(&status);
+    if (WIFEXITED(status))
+        return (WEXITSTATUS(status));
+    return (status);
 }

@@ -1,13 +1,10 @@
 #include "main.h"
 
 /**
- * shell_error - print default error message
- *
- * Return: void
+ * shell_error - Prints default error message and returns EXIT_FAILURE
  */
-
 int shell_error(void)
 {
-	perror("./shell - not found");
-	return (EXIT_FAILURE);
+    perror("./hsh - not found");
+    return (EXIT_FAILURE);
 }

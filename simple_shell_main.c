@@ -1,48 +1,67 @@
 #include "main.h"
 
 /**
- * main - The main function of the shell.
- * Return: EXIT_SUCCESS on success or return code > 0 if error.
+ * main - Entry point of shell
  */
-
 int main(void)
 {
-	char *input_buffer = NULL, **myargv;
-	size_t size_allocated;
-	int char_read, ret = EXIT_SUCCESS;
+    char buffer[1024];
+    char *argv[64];
+    int ret = 0;
+    ssize_t nread;
+    int interactive;
 
-	signal(SIGINT, SIG_IGN); /* ignore ctrl-C signal */
-	do {
-		if (isatty(STDIN_FILENO))
-			printf("\033[0;39m#simple_shell(%d)$ ", getpid());
+    signal(SIGINT, SIG_IGN);
 
-		fflush(stdin);
-		char_read = getline(&input_buffer, &size_allocated, stdin);
+    interactive = isatty(STDIN_FILENO);
 
-		if (char_read == 1)
-			continue;
-		if (char_read == EOF)
-		{
-			free(input_buffer);
-			if (isatty(STDIN_FILENO))
-				putchar('\n');
-			return (ret); /* exit shell with ctrl-D or | */
-		}
+    while (1)
+    {
+        if (interactive)
+            write(1, "#simple_shell$ ", 14);
 
-		input_buffer[char_read - 1] = 0; /* overwrite \n */
-		if (strncmp(input_buffer, "env", 3) == 0)
-		{
-			print_env();
-			continue;
-		}
-		if (strncmp(input_buffer, "exit", 4) == 0)
-		{
-			free(input_buffer);
-			return (ret); /* ret= return code of last cmd before exit */
-		}
-		myargv = fill_args(input_buffer);
-		if (myargv[0] != NULL)
-			ret = execute_command(myargv);
-		free(myargv);
-	} while (1);
+        nread = read(STDIN_FILENO, buffer, 1023);
+        if (nread <= 0)
+        {
+            if (interactive)
+                write(1, "\n", 1);
+            break;
+        }
+
+        buffer[nread] = '\0';
+        /* remove trailing newline */
+        if (buffer[nread - 1] == '\n')
+            buffer[nread - 1] = '\0';
+
+        if (buffer[0] == '\0')
+            continue;
+
+        if (buffer[0] == 'e' && buffer[1] == 'n' && buffer[2] == 'v' && buffer[3] == '\0')
+        {
+            print_env();
+            continue;
+        }
+
+        if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' &&
+            buffer[3] == 't' && buffer[4] == '\0')
+            break;
+
+        /* tokenize input manually (or using fill_args) */
+        char *tmp = buffer;
+        int argc = 0;
+        tokenize:
+        char *tok = strtok(tmp, " \t");
+        tmp = NULL;
+        while (tok && argc < 63)
+        {
+            argv[argc++] = tok;
+            tok = strtok(NULL, " \t");
+        }
+        argv[argc] = NULL;
+
+        if (argv[0])
+            ret = execute_command(argv);
+    }
+
+    return (ret);
 }
