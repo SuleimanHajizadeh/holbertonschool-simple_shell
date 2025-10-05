@@ -76,17 +76,17 @@ total 64
 ----------
 Non-interactive mode:
 ```
-root@970d48fbae6b:/holbertonschool-simple_shell# echo ls | ./hsh
+root@3a4998b26899419fa5fba17f06eb90de-2377118072:/holbertonschool-simple_shell# echo ls | ./hsh
 AUTHORS            getenv.c  man_1_simple_shell  shell_errors.c
 exec_exists_cmd.c  hsh       print_env.c         simple_shell_main.c
 fill_argv.c        main.h    README.md
-root@970d48fbae6b:/holbertonschool-simple_shell#
+root@3a4998b26899419fa5fba17f06eb90de-2377118072:/holbertonschool-simple_shell#
 ```
 ----------
 Exit the programm:
 ```
 #simple_shell(*current_pid*)$ exit
-root@970d48fbae6b:/holbertonschool-simple_shell#
+root@3a4998b26899419fa5fba17f06eb90de-2377118072:/holbertonschool-simple_shell#
 ```
 ----------
 
