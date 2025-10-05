@@ -3,42 +3,48 @@
 /**
  * fill_args - Tokenizes a string into an array of arguments.
  * @input_buffer: The string to tokenize.
- * Return: The number of arguments filled into the array.
+ *
+ * Return: NULL-terminated array of argument strings.
  */
-
 char **fill_args(char *input_buffer)
 {
-	char *token;
-	char **argv = NULL;
-	int token_count = 0;
+    char *token;
+    char **argv;
+    int count = 0, i = 0;
+    char *buffer_copy;
 
-	/* ignore heading spaces and tabs */
-	while (*input_buffer == ' ' || *input_buffer == '\t')
-		input_buffer++;
+    /* Ignore leading spaces and tabs */
+    while (*input_buffer == ' ' || *input_buffer == '\t')
+        input_buffer++;
 
-	token = strtok(input_buffer, " ");
-	while (token != NULL)
-	{
-		/* get contiguous memory allocation simplifies code/freeing process */
-		argv = realloc(argv, (token_count + 1) * sizeof(char *));
-		if (argv == NULL)
-		{
-			perror("Memory allocation error");
-			exit(EXIT_FAILURE);
-		}
+    /* Make a copy of input_buffer for counting tokens */
+    buffer_copy = strdup(input_buffer);
+    if (!buffer_copy)
+        return (NULL);
 
-		argv[token_count] = token;
-		token = strtok(NULL, " ");
-		token_count++;
-	}
-	/* alloc for end of argv NULL */
-	argv = realloc(argv, (token_count + 1) * sizeof(char *));
-	if (argv == NULL)
-	{
-		perror("Memory allocation error");
-		exit(EXIT_FAILURE);
-	}
+    /* Count number of tokens */
+    token = strtok(buffer_copy, " \t");
+    while (token)
+    {
+        count++;
+        token = strtok(NULL, " \t");
+    }
+    free(buffer_copy);
 
-	argv[token_count] = NULL;
-	return (argv);
+    /* Allocate exact memory for argv */
+    argv = malloc((count + 1) * sizeof(char *));
+    if (!argv)
+        return (NULL);
+
+    /* Fill argv */
+    i = 0;
+    token = strtok(input_buffer, " \t");
+    while (token)
+    {
+        argv[i++] = token;
+        token = strtok(NULL, " \t");
+    }
+    argv[i] = NULL;
+
+    return (argv);
 }
