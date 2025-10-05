@@ -1,7 +1,11 @@
 #include "main.h"
+#include <string.h>
+#include <unistd.h>
+#include <signal.h>
 
 /**
- * main - Entry point of shell
+ * main - Entry point of the simple shell.
+ * Return: 0 on success, >0 on failure.
  */
 int main(void)
 {
@@ -10,9 +14,11 @@ int main(void)
     int ret = 0;
     ssize_t nread;
     int interactive;
+    int argc;
+    char *tok;
 
+    /* Ignore Ctrl+C */
     signal(SIGINT, SIG_IGN);
-
     interactive = isatty(STDIN_FILENO);
 
     while (1)
@@ -25,33 +31,31 @@ int main(void)
         {
             if (interactive)
                 write(1, "\n", 1);
-            break;
+            break; /* Ctrl+D or EOF */
         }
 
         buffer[nread] = '\0';
-        /* remove trailing newline */
         if (buffer[nread - 1] == '\n')
             buffer[nread - 1] = '\0';
-
         if (buffer[0] == '\0')
             continue;
 
-        if (buffer[0] == 'e' && buffer[1] == 'n' && buffer[2] == 'v' && buffer[3] == '\0')
+        /* Handle 'env' command */
+        if (buffer[0] == 'e' && buffer[1] == 'n' &&
+            buffer[2] == 'v' && buffer[3] == '\0')
         {
             print_env();
             continue;
         }
 
-        if (buffer[0] == 'e' && buffer[1] == 'x' && buffer[2] == 'i' &&
-            buffer[3] == 't' && buffer[4] == '\0')
+        /* Handle 'exit' command */
+        if (buffer[0] == 'e' && buffer[1] == 'x' &&
+            buffer[2] == 'i' && buffer[3] == 't' && buffer[4] == '\0')
             break;
 
-        /* tokenize input manually (or using fill_args) */
-        char *tmp = buffer;
-        int argc = 0;
-        tokenize:
-        char *tok = strtok(tmp, " \t");
-        tmp = NULL;
+        /* Tokenize input into argv */
+        argc = 0;
+        tok = strtok(buffer, " \t");
         while (tok && argc < 63)
         {
             argv[argc++] = tok;

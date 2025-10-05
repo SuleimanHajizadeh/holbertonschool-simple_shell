@@ -1,13 +1,9 @@
 #include "main.h"
+#include <string.h>
 
-/**
- * _getenv - Returns value of environment variable
- * @name: Variable name
- * Return: Pointer to value or NULL
- */
 char *_getenv(const char *name)
 {
-    int i;
+    int i, j;
     size_t len;
 
     if (!name || !environ)
@@ -16,10 +12,10 @@ char *_getenv(const char *name)
     len = strlen(name);
     for (i = 0; environ[i]; i++)
     {
-        size_t j = 0;
-        while (j < len && environ[i][j] == name[j])
+        j = 0;
+        while (j < (int)len && environ[i][j] == name[j])
             j++;
-        if (j == len && environ[i][j] == '=')
+        if (j == (int)len && environ[i][j] == '=')
             return (&environ[i][len + 1]);
     }
     return (NULL);

@@ -1,8 +1,5 @@
 #include "main.h"
 
-/**
- * file_exist - Checks if a file exists
- */
 int file_exist(char *file)
 {
     struct stat st;
@@ -12,21 +9,24 @@ int file_exist(char *file)
     return (1);
 }
 
-/**
- * find_cmd_path - Finds full path of command using PATH
- */
 int find_cmd_path(char *cmd, char *work_buffer)
 {
-    char *path_var = _getenv("PATH");
-    char *token;
-    int i, j;
+    char *path_var;
+    int i, j, m;
+    char dir[1024];
 
-    if (cmd[0] == '/' || (cmd[0] == '.' && cmd[1] == '/'))
+    path_var = _getenv("PATH");
+
+    if ((cmd[0] == '/') || (cmd[0] == '.' && cmd[1] == '/'))
     {
         if (file_exist(cmd) == 0)
         {
-            for (i = 0; cmd[i]; i++)
+            i = 0;
+            while (cmd[i])
+            {
                 work_buffer[i] = cmd[i];
+                i++;
+            }
             work_buffer[i] = '\0';
             return (0);
         }
@@ -36,14 +36,9 @@ int find_cmd_path(char *cmd, char *work_buffer)
     if (!path_var || !*path_var)
         return (1);
 
-    /* iterate PATH directories */
     i = 0;
     while (path_var[i])
     {
-        int k = 0;
-        char dir[1024];
-
-        /* copy until ':' or end */
         j = 0;
         while (path_var[i] && path_var[i] != ':' && j < 1023)
             dir[j++] = path_var[i++];
@@ -60,7 +55,7 @@ int find_cmd_path(char *cmd, char *work_buffer)
         }
         work_buffer[j++] = '/';
 
-        int m = 0;
+        m = 0;
         while (cmd[m])
             work_buffer[j++] = cmd[m++];
         work_buffer[j] = '\0';
@@ -71,9 +66,6 @@ int find_cmd_path(char *cmd, char *work_buffer)
     return (1);
 }
 
-/**
- * execute_command - fork and exec command
- */
 int execute_command(char *argv[])
 {
     pid_t pid;
