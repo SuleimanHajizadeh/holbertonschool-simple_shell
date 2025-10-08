@@ -1,44 +1,49 @@
 #include "main.h"
-#include <string.h>
-#include <stdlib.h>
 
 /**
- * fill_args - Tokenizes a string into an array of arguments.
- * @input_buffer: The string to tokenize.
- * Return: A NULL-terminated array of pointers to tokens.
+ * fill_args - split input line into arguments
+ * @line: input line
+ *
+ * Return: NULL-terminated array of strings
  */
-char **fill_args(char *input_buffer)
+char **fill_args(char *line)
 {
-    char *token;
-    char **argv;
-    int count = 0;
-    int i;
+    char **args;
+    char *arg;
+    int i = 0, j, start, len = 0;
 
-    /* Count tokens first */
-    token = strtok(input_buffer, " \t");
-    while (token)
+    if (!line)
+        return (NULL);
+
+    args = malloc(sizeof(char *) * 64); /* supports up to 63 args */
+    if (!args)
+        return (NULL);
+
+    while (line[len])
     {
-        count++;
-        token = strtok(NULL, " \t");
+        while (line[len] == ' ' || line[len] == '\t' || line[len] == '\n')
+            len++;
+        if (!line[len])
+            break;
+
+        start = len;
+        while (line[len] && line[len] != ' ' && line[len] != '\t' && line[len] != '\n')
+            len++;
+
+        arg = malloc(len - start + 1);
+        if (!arg)
+        {
+            for (j = 0; j < i; j++)
+                free(args[j]);
+            free(args);
+            return (NULL);
+        }
+
+        memcpy(arg, &line[start], len - start);
+        arg[len - start] = '\0';
+        args[i++] = arg;
     }
 
-    /* Allocate memory for argv (count + 1 for NULL) */
-    argv = malloc((count + 1) * sizeof(char *));
-    if (!argv)
-    {
-        perror("malloc failed");
-        exit(EXIT_FAILURE);
-    }
-
-    /* Fill argv */
-    i = 0;
-    token = strtok(input_buffer, " \t");
-    while (token)
-    {
-        argv[i++] = token;
-        token = strtok(NULL, " \t");
-    }
-    argv[i] = NULL;
-
-    return (argv);
+    args[i] = NULL;
+    return (args);
 }
