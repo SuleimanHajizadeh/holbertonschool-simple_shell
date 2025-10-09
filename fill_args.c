@@ -1,51 +1,58 @@
 #include "main.h"
-#include <string.h>
-#include <stdlib.h>
 
 /**
- * fill_args - split input line into arguments
+ * fill_args - split a line into arguments (no strtok)
  * @line: input line
- *
- * Return: NULL-terminated array of strings
+ * Return: NULL-terminated array of arguments
  */
 char **fill_args(char *line)
 {
-    char **args;
-    char *arg;
-    int i = 0, j, start, len = 0;
+    char **argv = NULL;
+    int argc = 0, i = 0, start = 0, len = 0;
 
     if (!line)
         return (NULL);
 
-    args = malloc(sizeof(char *) * 64); /* supports up to 63 args */
-    if (!args)
-        return (NULL);
-
+    /* get length of input */
     while (line[len])
+        len++;
+
+    while (i <= len)
     {
-        while (line[len] == ' ' || line[len] == '\t' || line[len] == '\n')
-            len++;
-        if (!line[len])
-            break;
+        /* skip spaces */
+        while (i < len && (line[i] == ' ' || line[i] == '\t'))
+            i++;
 
-        start = len;
-        while (line[len] && line[len] != ' ' && line[len] != '\t' && line[len] != '\n')
-            len++;
+        start = i;
 
-        arg = malloc(len - start + 1);
-        if (!arg)
+        /* find end of word */
+        while (i < len && line[i] != ' ' && line[i] != '\t')
+            i++;
+
+        if (i > start) /* found a word */
         {
-            for (j = 0; j < i; j++)
-                free(args[j]);
-            free(args);
-            return (NULL);
+            char *arg;
+            int j, word_len = i - start;
+
+            argv = realloc(argv, sizeof(char *) * (argc + 2));
+            if (!argv)
+                return (NULL);
+
+            arg = malloc(word_len + 1);
+            if (!arg)
+                return (NULL);
+
+            for (j = 0; j < word_len; j++)
+                arg[j] = line[start + j];
+            arg[word_len] = '\0';
+
+            argv[argc] = arg;
+            argc++;
         }
-
-        memcpy(arg, &line[start], len - start);
-        arg[len - start] = '\0';
-        args[i++] = arg;
+        i++;
     }
+    if (argv)
+        argv[argc] = NULL;
 
-    args[i] = NULL;
-    return (args);
+    return (argv);
 }

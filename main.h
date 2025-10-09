@@ -26,4 +26,11 @@ void print_env(void);
 /* Errors */
 int shell_error(void);
 
+/* Custom string functions (NO strtok/strlen/strdup/strcmp) */
+int _strlen(const char *s);
+int _strcmp(const char *s1, const char *s2);
+char *_strcpy(char *dest, const char *src);
+char *_strdup(const char *s);
+void *_memcpy(void *dest, const void *src, size_t n);
+
 #endif /* SIMPLE_SHELL */
